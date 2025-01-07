@@ -17,7 +17,7 @@
     - name: Ensure the CSV file exists
       local_action:
         module: copy
-        dest: /etc/ansible/playbooks/firstplaybook/system_configurations_and_software.csv
+        dest: /etc/ansible/playbooks/TaskPlaybook/taskresult.csv
         content: "Task,Result\n"
         force: no
 
@@ -72,7 +72,7 @@
     - name: Append results to the CSV file
       local_action:
         module: lineinfile
-        path: /etc/ansible/playbooks/TaskPlaybook/result.csv
+        path: /etc/ansible/playbooks/TaskPlaybook/taskresult.csv
         line: |
           "Timestamp: {{ timestamp.stdout }}",""
           "CPU Usage","{{ cpu_usage.stdout }}%"
