@@ -1,6 +1,6 @@
 ---
 - name: Combined Tasks and Results in CSV Format
-  hosts: webservers
+  hosts: WebServers
   vars_files:
     - vars.yml
   become: yes
@@ -9,7 +9,7 @@
   tasks:
     - name: Ensure the destination directory exists
       file:
-        path: /etc/ansible/playbooks/firstplaybook
+        path: /etc/ansible/playbooks/TaskPlaybook
         state: directory
         mode: '0755'
       delegate_to: localhost
