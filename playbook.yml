@@ -1,0 +1,88 @@
+---
+- name: Combined Tasks and Results in CSV Format
+  hosts: WebServers
+  vars_files:
+    - vars.yml
+  become: yes
+  gather_facts: yes
+
+  tasks:
+    - name: Ensure the destination directory exists
+      file:
+        path: /etc/ansible/playbooks/firstplaybook
+        state: directory
+        mode: '0755'
+      delegate_to: localhost
+
+    - name: Ensure the CSV file exists
+      local_action:
+        module: copy
+        dest: /etc/ansible/playbooks/firstplaybook/system_configurations_and_software.csv
+        content: "Task,Result\n"
+        force: no
+
+    - name: Get current timestamp
+      shell: date '+%Y-%m-%d %H:%M:%S'
+      register: timestamp
+
+    - name: Get CPU usage
+      shell: top -bn1 | grep "Cpu(s)" | awk '{print $2 + $4}' | tr -d '\n'
+      register: cpu_usage
+
+    - name: Get RAM usage
+      shell: free -m | awk 'NR==2{printf "%.2f", $3*100/$2 }' | tr -d '\n'
+      register: ram_usage
+
+    - name: Check Apache2 status
+      shell: systemctl is-active apache2
+      register: apache_status
+      ignore_errors: yes
+
+    - name: Get Apache2 version
+      shell: apache2 -v | grep "Server version"
+      register: apache_version
+      ignore_errors: yes
+
+    - name: Check MySQL status
+      shell: systemctl is-active mysql
+      register: mysql_status
+      ignore_errors: yes
+
+    - name: Get MySQL version
+      shell: mysql --version
+      register: mysql_version
+      ignore_errors: yes
+
+    - name: Get PHP version
+      shell: php --version | head -n 1
+      register: php_version
+      ignore_errors: yes
+
+    - name: Get OS version
+      shell: cat /etc/os-release | grep PRETTY_NAME | cut -d '=' -f2 | tr -d '"'
+      register: os_version
+
+    - name: Setup Netdata Monitoring Tool
+      shell: |
+        curl -fsSL https://my-netdata.io/kickstart-static64.sh | bash
+      args:
+        executable: /bin/bash
+      ignore_errors: yes
+
+    - name: Append results to the CSV file
+      local_action:
+        module: lineinfile
+        path: /etc/ansible/playbooks/TaskPlaybook/result.csv
+        line: |
+          "Timestamp: {{ timestamp.stdout }}",""
+          "CPU Usage","{{ cpu_usage.stdout }}%"
+          "RAM Usage","{{ ram_usage.stdout }}%"
+          "OS Version","{{ os_version.stdout }}"
+          "Apache Status","{{ apache_status.stdout | default('N/A') }}"
+          "Apache Version","{{ apache_version.stdout | default('N/A') }}"
+          "MySQL Status","{{ mysql_status.stdout | default('N/A') }}"
+          "MySQL Version","{{ mysql_version.stdout | default('N/A') }}"
+          "PHP Version","{{ php_version.stdout | default('N/A') }}"
+          "Netdata URL","http://{{ ansible_default_ipv4.address }}:19999"
+        create: yes
+
