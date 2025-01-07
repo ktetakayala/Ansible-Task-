@@ -1,4 +1,3 @@
----
 - name: Combined Tasks and Results in CSV Format
   hosts: webservers
   vars_files:
@@ -9,7 +8,7 @@
   tasks:
     - name: Ensure the destination directory exists
       file:
-        path: /tmp/TaskPlaybook
+        path: /root/snap/semaphore/common/repositories/repository_4_4/TaskPlaybook
         state: directory
         mode: '0755'
       delegate_to: localhost
@@ -17,7 +16,7 @@
     - name: Ensure the CSV file exists
       local_action:
         module: copy
-        dest: /tmp/TaskPlaybook/taskresult.csv
+        dest: /root/snap/semaphore/common/repositories/repository_4_4/TaskPlaybook/taskresult.csv
         content: "Task,Result\n"
         force: no
 
@@ -72,7 +71,7 @@
     - name: Append results to the CSV file
       local_action:
         module: lineinfile
-        path: /tmp/TaskPlaybook/taskresult.csv
+        path: /root/snap/semaphore/common/repositories/repository_4_4/TaskPlaybook/taskresult.csv
         line: |
           "Timestamp: {{ timestamp.stdout }}",""
           "CPU Usage","{{ cpu_usage.stdout }}%"
@@ -85,15 +84,3 @@
           "PHP Version","{{ php_version.stdout | default('N/A') }}"
           "Netdata URL","http://{{ ansible_default_ipv4.address }}:19999"
         create: yes
-
-    - name: Debug environment for troubleshooting
-      shell: |
-        whoami
-        pwd
-        ls -ld /tmp/TaskPlaybook
-        echo $HOME
-      delegate_to: localhost
-      register: debug_output
-
-    - debug:
-        var: debug_output.stdout_lines
